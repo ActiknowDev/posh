@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;500;600;700&family=Quicksand:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Quicksand", "Comfortaa", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Comfortaa", cursive, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --color-accent: #800000;
+  --color-slate-950: #ffffff;
+}
+
+html, body, button, input, select, textarea {
+  font-family: "Quicksand", "Comfortaa", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Custom scrollbars and transition helpers */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.02); }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s infinite ease-in-out;
+}
+

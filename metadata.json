@@ -1,0 +1,6 @@
+{
+  "name": "POSH Training & Compliance",
+  "description": "An interactive POSH (Prevention of Sexual Harassment) training and compliance certification module for Indian workplaces, featuring an administrator reporting dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
