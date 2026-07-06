@@ -8,7 +8,7 @@ import {
   ArrowRight, ArrowLeft, CheckCircle2, 
   HelpCircle, Shield, FileSpreadsheet, Lock, AlertTriangle, 
   FileText, Activity, BookOpen, Signature, Award, ChevronRight,
-  Info, Mail, Users
+  Info, Mail, Users, ClipboardCheck
 } from 'lucide-react';
 import { ALL_SLIDES, SCENARIOS, QUIZ_QUESTIONS } from '../data/slides';
 import Certificate from './Certificate';
@@ -68,6 +68,14 @@ export default function TrainingModule({
     city: 'Delhi'
   });
 
+  const [toast, setToast] = useState(null);
+  
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
+
+
   useEffect(() => {
     setClickedRevealIdx([]);
     setFlippedCardIdx([]);
@@ -120,7 +128,8 @@ export default function TrainingModule({
   const handleEnrollSubmit = async (e) => {
     e.preventDefault();
     if (!enrollForm.name || !enrollForm.email || !enrollForm.employeeId || !enrollForm.department || !enrollForm.role || !enrollForm.city) {
-      alert('Please fill in all enrollment fields.');
+      // alert('Please fill in all enrollment fields.');
+      showToast('Please fill in all enrollment fields.');
       return;
     }
     const updated = {
@@ -142,6 +151,8 @@ export default function TrainingModule({
         onChangeSession({
             ...updated,
             id: savedUser.id,
+            isUserLogin: savedUser.isUserLogin,
+            mustRetakeTraining: true,
         });
 
     } catch (error) {
@@ -341,6 +352,7 @@ export default function TrainingModule({
         acknowledgedAt: now,
         completedAt: now,
         signatureSubmitted: true,
+        mustRetakeTraining: userSession.quizScore < 4 ? true : false,
     };
 
     try {
@@ -436,6 +448,12 @@ const handleGoogleSuccess = async (credentialResponse) => {
     }
 };
   return (
+    <>{toast && (
+        <div className="fixed bottom-5 right-5 bg-black border border-accent text-white px-4 py-3 rounded-none shadow-2xl flex items-center gap-2 z-50 text-xs font-mono uppercase tracking-wider animate-in fade-in slide-in-from-bottom-5 duration-200">
+          <ClipboardCheck className="w-4 h-4 text-accent" />
+          <span>{toast}</span>
+        </div>
+      )}
     <div className="bg-slate-50 min-h-screen flex flex-col justify-between selection:bg-accent selection:text-white" style={{ contentVisibility: 'auto' }}>
         {!userSession.isRegistered ? (
             <div className="flex-1 flex items-center justify-center p-6 bg-slate-50 min-h-screen">
@@ -500,20 +518,15 @@ const handleGoogleSuccess = async (credentialResponse) => {
                     onChange={(e) => setEnrollForm({ ...enrollForm, department: e.target.value })}
                     className="w-full text-xs font-bold bg-white text-slate-800 border border-slate-300 rounded-lg p-3 focus:ring-1 focus:ring-accent focus:outline-hidden"
                   >
-                    <option value="Engineering">Engineering</option>
-                    <option value="Human Resources">Human Resources</option>
-                    <option value="Sales & Marketing">Sales & Marketing</option>
-                    <option value="Operations">Operations</option>
-                    <option value="Product Management">Product Management</option>
-
+                    
                     <option value="Web App Development">Web App Development</option>
+                    <option value="Sales & Marketing">Sales & Marketing</option>
+                    <option value="Product Management">Product Management</option>
+                    <option value="Operations">Operations</option>
                     <option value="Mobile App Development">Mobile App Development</option>
+                    <option value="Human Resources">Human Resources</option>
                     <option value="BI">BI</option>
                     <option value="Accounts">Accounts</option>
-                    <option value="Human Resources">Human Resources</option>
-                    <option value="Sales & Marketing">Sales & Marketing</option>
-                    <option value="Operations">Operations</option>
-                    <option value="Product Management">Product Management</option>
                     <option value="Others">Others</option>
 
 
@@ -587,7 +600,7 @@ const handleGoogleSuccess = async (credentialResponse) => {
         userSession.isUserLogin && !userSession.mustRetakeTraining && viewMode === "admin" ? ( 
             <Dashboard userSession={userSession}/>
         ) :
-        userSession.isUserLogin && !userSession.mustRetakeTraining && viewMode === "training" ? (
+        userSession.isUserLogin && (!userSession.mustRetakeTraining || userSession.signatureSubmitted) && viewMode === "training" ? (
             <Certificate userSession={userSession} config={config} />
         ) :
         (
@@ -2312,6 +2325,7 @@ const handleGoogleSuccess = async (credentialResponse) => {
         
 
     </div>
+    </>
     // <div className="bg-slate-50 min-h-screen flex flex-col justify-between selection:bg-accent selection:text-white">
       
     //   {!userSession.isRegistered ? (

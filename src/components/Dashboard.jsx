@@ -53,11 +53,11 @@ export default function Dashboard({userSession}) {
         {
             name: "Completed At",
             // selector: row => new Date(row.completedAt).toLocaleString("en-IN")
-            selector: row => new Date(row.completedAt).toLocaleDateString("en-IN", {
+            selector: row => row.completedAt ? new Date(row.completedAt).toLocaleDateString("en-IN", {
                 day: "2-digit",
                 month: "2-digit",
                 year: "numeric"
-            })
+            }) : "-"
         },
         {
             name:"Result",

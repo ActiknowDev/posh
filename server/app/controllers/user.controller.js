@@ -5,9 +5,17 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 exports.findAll = async (req, res) => {
     try {
-        const users = await db.users.findAll(
-            // { attributes: [ 'id', 'name', 'email', 'employeeId', 'department', 'role', 'city', 'quizScore', 'acknowledged', 'completedAt', 'createdAt', 'updatedAt' ]}
-        );
+        const where = {};
+
+        if (req.query.completedAt === "notnull") {
+            where.completedAt = {
+                [Op.not]: null,
+            };
+        }
+
+        const users = await db.users.findAll({
+            where,
+        });
 
         return res.status(200).send({
             success: true,
@@ -233,13 +241,27 @@ exports.googleLogin = async (req, res) => {
 
         const payload = ticket.getPayload();
         const email = payload.email;
-
-        const user = await db.users.findOne({
+        const name = payload.name;
+        const ipAddress =
+                req.headers["x-forwarded-for"]?.split(",")[0] ||
+                req.socket.remoteAddress ||
+                req.ip;
+        console.log("ipAddress===========",ipAddress);
+        let user = await db.users.findOne({
             where: { email },
             order: [["completedAt", "DESC"]]
         });
         if (!user) {
-            return res.status(404).json({ success: false, message: "Employee not found." });
+            // return res.status(404).json({ success: false, message: "Employee not found." });
+            user = await db.users.create({
+                name,
+                employeeId: `G-${Math.floor(Math.random() * 1000) .toString() .padStart(3, "0")}`,
+                email,
+                quizScore: 0,
+                ipAddress,
+                quizCompleted: false,
+                acknowledged: false,
+            });
         }
         const data = user.toJSON();
 
@@ -274,7 +296,7 @@ exports.googleLogin = async (req, res) => {
         });
 
     } catch (err) {
-
+        console.error("Google login error:", err);
         return res.status(500).json({
             success: false,
             message: err.message

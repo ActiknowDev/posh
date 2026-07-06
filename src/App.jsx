@@ -13,6 +13,8 @@ import AdminPortal from './components/AdminPortal';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 
+import { getConfigs } from "./services/user";
+
 // Seeding Default POSH configurations (Actiknow compliance defaults)
 const DEFAULT_CONFIG = {
   companyName: 'Actiknow Consulting',
@@ -65,8 +67,13 @@ export default function App() {
         const parsed = JSON.parse(savedConfig);
         // Force update to the new Deepika Malhotra / Actiknow roster if running on stale seed names
         if (!parsed.presidingOfficer || !parsed.presidingOfficer.includes('Deepika Malhotra') || parsed.icEmail !== 'Posh@actiknow.com') {
-          setConfig(DEFAULT_CONFIG);
-          localStorage.setItem('posh_config', JSON.stringify(DEFAULT_CONFIG));
+          getConfigs().then((config) => {
+              const usersData = config.data.data
+              setConfig(usersData);
+              localStorage.setItem('posh_config', JSON.stringify(usersData));
+          });
+          // setConfig(DEFAULT_CONFIG);
+          // localStorage.setItem('posh_config', JSON.stringify(DEFAULT_CONFIG));
         } else {
           setConfig(parsed);
         }
@@ -270,7 +277,7 @@ export default function App() {
           {/* Interactive controls */}
           <div className="flex items-center gap-2">
             <div className="flex items-center bg-slate-100 p-0.5 border border-slate-200 rounded-lg">
-            { session.mustRetakeTraining && (
+            {/* { session.mustRetakeTraining && ( */}
               <button
                 onClick={() => setViewMode('training')}
                 className={`px-3 py-2.5 md:px-4 md:py-1.5 text-[10px] md:text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer rounded-md ${viewMode === 'training' ? 'bg-accent text-white shadow-sm' : 'text-slate-600 hover:text-accent'}`}
@@ -279,8 +286,8 @@ export default function App() {
                 <GraduationCap className="w-4 h-4" />
                 <span className="hidden sm:inline">Training</span>
               </button>
-            )}
-            {!session.isUserLogin && (
+            {/* )} */}
+            {/* {!session.isUserLogin && ( */}
               <button
                 onClick={() => setViewMode('admin')}
                 className={`px-3 py-1.5 md:px-4 md:py-1.5 text-[10px] md:text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer rounded-md ${viewMode === 'admin' ? 'bg-accent text-white shadow-sm' : 'text-slate-600 hover:text-accent'}`}
@@ -289,7 +296,7 @@ export default function App() {
                 <Settings className="w-4 h-4" />
                 <span className="hidden sm:inline">Admin Panel</span>
               </button>
-           )}
+           {/* )} */}
             </div>
 
             {/* Global Directory button always available */}
@@ -353,7 +360,7 @@ export default function App() {
             config={config}
             onAddCompletion={handleAddCompletion}
             goToLogin={() => setViewMode("login")}
-            onLoginSuccess={() => setViewMode("dashboard")}
+            onLoginSuccess={() => setViewMode("admin")}
             viewMode={viewMode}
             />
         )}

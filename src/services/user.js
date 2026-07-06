@@ -23,3 +23,11 @@ export const completeTraining = (id, postData) => {
 export const googleLogin = (data) => {
    return axios.post("/users/google-login", data);
 };
+
+export const saveConfig = (postData) => {
+   return axios.post('/save', postData);
+}
+
+export const getConfigs = (requestData) => {
+   return axios.get('/configs', {params: requestData});
+}

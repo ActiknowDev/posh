@@ -29,6 +29,7 @@ app.use('/static-assets', express.static(__dirname + '/assets'));
 app.use('/profileImage', express.static(path.join(__dirname, 'assets/profileImages')));
 
 require('./app/routes/user.routes')(app);
+require('./app/routes/config.routes')(app);
 
 const db = require("./app/models");
 db.sequelize.sync().then(async () => {

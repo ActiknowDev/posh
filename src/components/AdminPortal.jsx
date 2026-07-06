@@ -10,7 +10,7 @@ import {
   Sliders, UserCheck, Trash2, Calendar, MapPin
 } from 'lucide-react';
 
-import { getUsers} from "./../services/user";
+import { getUsers, saveConfig } from "./../services/user";
 
 export default function AdminPortal({
   config,
@@ -45,7 +45,7 @@ export default function AdminPortal({
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleSaveConfig = (e) => {
+  const handleSaveConfig = async (e) => {
     e.preventDefault();
     const updated = {
       companyName,
@@ -58,8 +58,17 @@ export default function AdminPortal({
       policyLink,
       passingScore: Number(passingScore)
     };
-    onUpdateConfig(updated);
-    showToast('IC & Module Configuration Saved Successfully!');
+   try {
+    const response = await saveConfig(updated);
+      if (response.data.success) {
+          onUpdateConfig(response.data.data); // or updated if your API doesn't return the updated object
+          showToast(response.data.message || "Configuration updated successfully.", "success");
+      }
+    } catch (error) {
+        console.error("Failed to save configuration:", error);
+        showToast(error.response?.data?.message || "Unable to save configuration. Please try again.","error");
+    }    
+    // showToast('IC & Module Configuration Saved Successfully!');
   };
 
   const handleExportCSV = () => {
@@ -101,6 +110,7 @@ export default function AdminPortal({
 //   const totalAssignedRef = 40;
   const completedHeadcount = completions.length;
   const pendingHeadcount = Math.max(0, totalAssignedRef - completedHeadcount);
+  console.log(completedHeadcount , totalAssignedRef);
   const completionRate = Math.round((completedHeadcount / totalAssignedRef) * 100);
 
   const departments = ['Web App Development','BI','Accounts','Mobile App Development','Human Resources','Sales & Marketing','Operations','Product Management','Others'];
@@ -130,13 +140,13 @@ export default function AdminPortal({
   });
 
    useEffect(() => {
-        getUsers().then((users) => {
-            console.log("Fetched users:", users.data.data);
+        getUsers({ completedAt: "notnull" }).then((users) => {
             const usersData = users.data.data
             handleOriginalData(usersData);
-            setTotalAssignedRef(usersData.length);
-            // localStorage.setItem('posh_completions', JSON.stringify(users.data.data));
-        });    
+        });
+        getUsers().then((users) => {
+            setTotalAssignedRef(users.data.data.length);
+        });     
     }, []);
 
   return (
@@ -449,13 +459,13 @@ export default function AdminPortal({
                         <td className="px-6 py-4 font-mono text-xs">{r.employeeId}</td>
                         <td className="px-6 py-4">
                           <span className="bg-white/5 border border-white/10 text-white rounded-none px-2 py-0.5 font-mono font-bold text-[10px] uppercase">
-                            {r.department}
+                            {r.department ? r.department.toUpperCase() : "N/A"}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-xs font-mono">
                           <div className="flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 bg-[#CCFF00]"></span>
-                            <span>{r.city.toUpperCase()}</span>
+                            <span>{r.city ? r.city.toUpperCase() : "N/A"}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-center">
