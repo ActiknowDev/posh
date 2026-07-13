@@ -31,3 +31,7 @@ export const saveConfig = (postData) => {
 export const getConfigs = (requestData) => {
    return axios.get('/configs', {params: requestData});
 }
+
+export const loadEmployee = (employeeId) => {
+   return axios.get(`/users/${employeeId}`);
+}

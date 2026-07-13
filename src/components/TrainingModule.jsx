@@ -18,6 +18,7 @@ import { GoogleLogin } from "@react-oauth/google";
 import { googleLogin } from "../services/user";
 
 import Dashboard from './Dashboard';
+import LandingPage from './LandingPage';
 
 export default function TrainingModule({
   userSession,
@@ -455,146 +456,149 @@ const handleGoogleSuccess = async (credentialResponse) => {
         </div>
       )}
     <div className="bg-slate-50 min-h-screen flex flex-col justify-between selection:bg-accent selection:text-white" style={{ contentVisibility: 'auto' }}>
-        {!userSession.isRegistered ? (
-            <div className="flex-1 flex items-center justify-center p-6 bg-slate-50 min-h-screen">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-md overflow-hidden max-w-lg w-full text-left">
-            {/* Form Banner */}
-            <div className="bg-[#800000] p-6 text-white text-center border-b border-rose-900/10">
-              <Shield className="w-10 h-10 text-white mx-auto mb-2" />
-              <h2 className="text-xl md:text-2xl font-extrabold font-display uppercase tracking-wider text-white">Compliance Enrollment</h2>
-              <p className="text-[10px] text-rose-250 mt-1 uppercase tracking-widest font-mono font-bold">
-                Statutory POSH Awareness Program &bull; India
-              </p>
-            </div>
+      {console.log("userSession========",userSession)}
+        {
+        !userSession.isRegistered ? (
+          // <div className="flex-1 flex items-center justify-center p-6 bg-slate-50 min-h-screen">
+          //   <div className="bg-white rounded-xl border border-slate-200 shadow-md overflow-hidden max-w-lg w-full text-left">
+          //     {/* Form Banner */}
+          //     <div className="bg-[#800000] p-6 text-white text-center border-b border-rose-900/10">
+          //       <Shield className="w-10 h-10 text-white mx-auto mb-2" />
+          //       <h2 className="text-xl md:text-2xl font-extrabold font-display uppercase tracking-wider text-white">Compliance Enrollment</h2>
+          //       <p className="text-[10px] text-rose-250 mt-1 uppercase tracking-widest font-mono font-bold">
+          //         Statutory POSH Awareness Program &bull; India
+          //       </p>
+          //     </div>
 
-            {/* Fields Form */}
-            <form onSubmit={handleEnrollSubmit} className="p-6 space-y-4">
-              <div className="bg-[#800000]/5 border border-[#800000]/15 p-3.5 rounded-lg text-xs leading-relaxed text-slate-705 font-sans">
-                <strong className="text-[#800000]">📝 MANDATORY TRAINING NOTICE:</strong> This interactive training module is required under India's Prevention of Sexual Harassment (POSH) regulations. Your completion and quiz details will be logged in company compliance audits.
-              </div>
+          //     {/* Fields Form */}
+          //     <form onSubmit={handleEnrollSubmit} className="p-6 space-y-4">
+          //       <div className="bg-[#800000]/5 border border-[#800000]/15 p-3.5 rounded-lg text-xs leading-relaxed text-slate-705 font-sans">
+          //         <strong className="text-[#800000]">📝 MANDATORY TRAINING NOTICE:</strong> This interactive training module is required under India's Prevention of Sexual Harassment (POSH) regulations. Your completion and quiz details will be logged in company compliance audits.
+          //       </div>
 
-              <div>
-                <label className="text-[10px] font-extrabold text-slate-600 block uppercase tracking-wider mb-1.5 font-mono">Full Name</label>
-                <input 
-                  type="text"
-                  placeholder="Employee First & Last Name"
-                  value={enrollForm.name}
-                  onChange={(e) => setEnrollForm({ ...enrollForm, name: e.target.value })}
-                  className="w-full text-xs font-semibold bg-white border border-slate-300 text-slate-800 p-3 rounded-lg focus:ring-1 focus:ring-accent focus:border-accent focus:outline-hidden"
-                  required
-                />
-              </div>
+          //       <div>
+          //         <label className="text-[10px] font-extrabold text-slate-600 block uppercase tracking-wider mb-1.5 font-mono">Full Name</label>
+          //         <input 
+          //           type="text"
+          //           placeholder="Employee First & Last Name"
+          //           value={enrollForm.name}
+          //           onChange={(e) => setEnrollForm({ ...enrollForm, name: e.target.value })}
+          //           className="w-full text-xs font-semibold bg-white border border-slate-300 text-slate-800 p-3 rounded-lg focus:ring-1 focus:ring-accent focus:border-accent focus:outline-hidden"
+          //           required
+          //         />
+          //       </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[10px] font-extrabold text-slate-600 block uppercase tracking-wider mb-1.5 font-mono">Employee Email</label>
-                  <input 
-                    type="email"
-                    placeholder="name@company.com"
-                    value={enrollForm.email}
-                    onChange={(e) => setEnrollForm({ ...enrollForm, email: e.target.value })}
-                    className="w-full text-xs font-semibold bg-white border border-slate-300 text-slate-800 p-3 rounded-lg focus:ring-1 focus:ring-accent focus:border-accent focus:outline-hidden"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-extrabold text-slate-600 block uppercase tracking-wider mb-1.5 font-mono">Employee ID</label>
-                  <input 
-                    type="text"
-                    placeholder="e.g. EMP-1049"
-                    value={enrollForm.employeeId}
-                    onChange={(e) => setEnrollForm({ ...enrollForm, employeeId: e.target.value })}
-                    className="w-full text-xs font-semibold bg-white border border-slate-300 text-slate-800 p-3 rounded-lg focus:ring-1 focus:ring-accent focus:border-accent focus:outline-hidden"
-                    required
-                  />
-                </div>
-              </div>
+          //       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          //         <div>
+          //           <label className="text-[10px] font-extrabold text-slate-600 block uppercase tracking-wider mb-1.5 font-mono">Employee Email</label>
+          //           <input 
+          //             type="email"
+          //             placeholder="name@company.com"
+          //             value={enrollForm.email}
+          //             onChange={(e) => setEnrollForm({ ...enrollForm, email: e.target.value })}
+          //             className="w-full text-xs font-semibold bg-white border border-slate-300 text-slate-800 p-3 rounded-lg focus:ring-1 focus:ring-accent focus:border-accent focus:outline-hidden"
+          //             required
+          //           />
+          //         </div>
+          //         <div>
+          //           <label className="text-[10px] font-extrabold text-slate-600 block uppercase tracking-wider mb-1.5 font-mono">Employee ID</label>
+          //           <input 
+          //             type="text"
+          //             placeholder="e.g. EMP-1049"
+          //             value={enrollForm.employeeId}
+          //             onChange={(e) => setEnrollForm({ ...enrollForm, employeeId: e.target.value })}
+          //             className="w-full text-xs font-semibold bg-white border border-slate-300 text-slate-800 p-3 rounded-lg focus:ring-1 focus:ring-accent focus:border-accent focus:outline-hidden"
+          //             required
+          //           />
+          //         </div>
+          //       </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="text-[10px] font-extrabold text-slate-600 block uppercase tracking-wider mb-1.5 font-mono font-mono">Department</label>
-                  <select 
-                    value={enrollForm.department}
-                    onChange={(e) => setEnrollForm({ ...enrollForm, department: e.target.value })}
-                    className="w-full text-xs font-bold bg-white text-slate-800 border border-slate-300 rounded-lg p-3 focus:ring-1 focus:ring-accent focus:outline-hidden"
-                  >
-                    
-                    <option value="Web App Development">Web App Development</option>
-                    <option value="Sales & Marketing">Sales & Marketing</option>
-                    <option value="Product Management">Product Management</option>
-                    <option value="Operations">Operations</option>
-                    <option value="Mobile App Development">Mobile App Development</option>
-                    <option value="Human Resources">Human Resources</option>
-                    <option value="BI">BI</option>
-                    <option value="Accounts">Accounts</option>
-                    <option value="Others">Others</option>
-
-
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] font-extrabold text-slate-600 block uppercase tracking-wider mb-1.5 font-mono font-mono">Designation</label>
-                  <input 
-                    type="text"
-                    value={enrollForm.role}
-                    onChange={(e) => setEnrollForm({ ...enrollForm, role: e.target.value })}
-                    className="w-full text-xs font-semibold bg-white border border-slate-300 text-slate-800 p-3 rounded-lg focus:ring-1 focus:ring-accent focus:border-accent focus:outline-hidden"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] font-extrabold text-slate-600 block uppercase tracking-wider mb-1.5 font-mono font-mono">Office branch</label>
-                  <select
-                    value={enrollForm.city}
-                    onChange={(e) => setEnrollForm({ ...enrollForm, city: e.target.value })}
-                    className="w-full text-xs font-bold bg-white text-slate-800 border border-slate-300 rounded-lg p-3 focus:ring-1 focus:ring-accent focus:outline-hidden"
-                  >
-                    <option value="Delhi">Delhi</option>
-                    <option value="Gurgaon">Gurgaon</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Start Slide deck action */}
-              <button
-                type="submit"
-                className="w-full py-3.5 bg-accent hover:bg-accent/90 text-white font-black uppercase tracking-widest rounded-lg mt-4 shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                id="start-training-enroll-btn"
-              >
-                <span>Authorize & Enroll in Course</span>
-                <ChevronRight className="w-5 h-5 text-white" />
-              </button>
-                
-              <p className="text-[10px] text-center text-slate-400 font-mono uppercase">
-                By enrolling, you certify these particulars are officially assigned.
-              </p>
-            </form>
-
-            <p className="ml-50 mb-1 align-center text-primary text-[15px] text-black-400 font-mono uppercase"> OR </p>
-            <div className="text-center mt-3">
-                <span className="text-xs text-slate-500"> Already registered?{" "} </span>
-                <button 
-                    onClick={goToLogin} 
-                    className="mb-4 underline text-primary text-[15px] text-slate-400 font-mono uppercase cursor-pointer"
-                > Login </button>
-            </div>
-
-            <div className="flex items-center my-2">
-                <div className="flex-1 border-t"></div>
-                <span className="mx-3 text-xs text-gray-500">OR</span>
-                <div className="flex-1 border-t"></div>
-            </div>
-
-            <div className="flex justify-center mb-4">
-                <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={() => alert("Google Login Failed")}
-                />
-            </div>
+          //       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          //         <div>
+          //           <label className="text-[10px] font-extrabold text-slate-600 block uppercase tracking-wider mb-1.5 font-mono font-mono">Department</label>
+          //           <select 
+          //             value={enrollForm.department}
+          //             onChange={(e) => setEnrollForm({ ...enrollForm, department: e.target.value })}
+          //             className="w-full text-xs font-bold bg-white text-slate-800 border border-slate-300 rounded-lg p-3 focus:ring-1 focus:ring-accent focus:outline-hidden"
+          //           >
+                      
+          //             <option value="Web App Development">Web App Development</option>
+          //             <option value="Sales & Marketing">Sales & Marketing</option>
+          //             <option value="Product Management">Product Management</option>
+          //             <option value="Operations">Operations</option>
+          //             <option value="Mobile App Development">Mobile App Development</option>
+          //             <option value="Human Resources">Human Resources</option>
+          //             <option value="BI">BI</option>
+          //             <option value="Accounts">Accounts</option>
+          //             <option value="Others">Others</option>
 
 
-          </div>
-        </div>
+          //           </select>
+          //         </div>
+          //         <div>
+          //           <label className="text-[10px] font-extrabold text-slate-600 block uppercase tracking-wider mb-1.5 font-mono font-mono">Designation</label>
+          //           <input 
+          //             type="text"
+          //             value={enrollForm.role}
+          //             onChange={(e) => setEnrollForm({ ...enrollForm, role: e.target.value })}
+          //             className="w-full text-xs font-semibold bg-white border border-slate-300 text-slate-800 p-3 rounded-lg focus:ring-1 focus:ring-accent focus:border-accent focus:outline-hidden"
+          //             required
+          //           />
+          //         </div>
+          //         <div>
+          //           <label className="text-[10px] font-extrabold text-slate-600 block uppercase tracking-wider mb-1.5 font-mono font-mono">Office branch</label>
+          //           <select
+          //             value={enrollForm.city}
+          //             onChange={(e) => setEnrollForm({ ...enrollForm, city: e.target.value })}
+          //             className="w-full text-xs font-bold bg-white text-slate-800 border border-slate-300 rounded-lg p-3 focus:ring-1 focus:ring-accent focus:outline-hidden"
+          //           >
+          //             <option value="Delhi">Delhi</option>
+          //             <option value="Gurgaon">Gurgaon</option>
+          //           </select>
+          //         </div>
+          //       </div>
+
+          //       {/* Start Slide deck action */}
+          //       <button
+          //         type="submit"
+          //         className="w-full py-3.5 bg-accent hover:bg-accent/90 text-white font-black uppercase tracking-widest rounded-lg mt-4 shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+          //         id="start-training-enroll-btn"
+          //       >
+          //         <span>Authorize & Enroll in Course</span>
+          //         <ChevronRight className="w-5 h-5 text-white" />
+          //       </button>
+                  
+          //       <p className="text-[10px] text-center text-slate-400 font-mono uppercase">
+          //         By enrolling, you certify these particulars are officially assigned.
+          //       </p>
+          //     </form>
+
+          //     <p className="ml-50 mb-1 align-center text-primary text-[15px] text-black-400 font-mono uppercase"> OR </p>
+          //     <div className="text-center mt-3">
+          //         <span className="text-xs text-slate-500"> Already registered?{" "} </span>
+          //         <button 
+          //             onClick={goToLogin} 
+          //             className="mb-4 underline text-primary text-[15px] text-slate-400 font-mono uppercase cursor-pointer"
+          //         > Login </button>
+          //     </div>
+
+          //     <div className="flex items-center my-2">
+          //         <div className="flex-1 border-t"></div>
+          //         <span className="mx-3 text-xs text-gray-500">OR</span>
+          //         <div className="flex-1 border-t"></div>
+          //     </div>
+
+          //     <div className="flex justify-center mb-4">
+          //         <GoogleLogin
+          //             onSuccess={handleGoogleSuccess}
+          //             onError={() => alert("Google Login Failed")}
+          //         />
+          //     </div>
+
+
+          //   </div>
+          // </div>
+          <LandingPage  onLoginSuccess={onLoginSuccess} onChangeSession={onChangeSession} showToast={showToast}/>
 
         ) :  
         userSession.isUserLogin && !userSession.mustRetakeTraining && viewMode === "admin" ? ( 

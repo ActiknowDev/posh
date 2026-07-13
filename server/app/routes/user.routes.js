@@ -15,5 +15,6 @@ module.exports = app => {
   app.post(`${process.env.API_PREFIX}/users/login`, controller.login);
   app.post(`${process.env.API_PREFIX}/create`, controller.create);
   app.put(`${process.env.API_PREFIX}/users/:id/complete`, controller.completeTraining);
-  app.post(`${process.env.API_PREFIX}/users/google-login`, controller.googleLogin);
+  // app.post(`${process.env.API_PREFIX}/users/google-login`, controller.googleLogin);
+  app.get(`${process.env.API_PREFIX}/users/:employeeId`, controller.findOneByEmployeeId);
 }

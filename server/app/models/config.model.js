@@ -46,6 +46,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     tableName: 'configs',
     timestamps: true,
+    comment: 'Table for POSH Training module',
   });
 
   return Config;

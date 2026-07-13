@@ -1,7 +1,8 @@
 const db = require('../models');
-const { Op } = require("sequelize");
-const { OAuth2Client } = require("google-auth-library");
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+// const { Sequelize } = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
+// const { OAuth2Client } = require("google-auth-library");
+// const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 exports.findAll = async (req, res) => {
     try {
@@ -13,7 +14,7 @@ exports.findAll = async (req, res) => {
             };
         }
 
-        const users = await db.users.findAll({
+        const users = await db.poshTrainings.findAll({
             where,
         });
 
@@ -39,7 +40,7 @@ exports.create = async (req, res) => {
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
         // Get latest training of this employee
-        const latestTraining = await db.users.findOne({
+        const latestTraining = await db.poshTrainings.findOne({
             where: { email: req.body.email },
             order: [["createdAt", "DESC"]]
         });
@@ -83,7 +84,7 @@ exports.create = async (req, res) => {
             req.socket.remoteAddress ||
             req.ip;
 
-        const user = await db.users.create({
+        const user = await db.poshTrainings.create({
             employeeId: req.body.employeeId,
             name: req.body.name,
             email: req.body.email,
@@ -115,7 +116,7 @@ exports.create = async (req, res) => {
 
 exports.completeTraining = async (req, res) => {
     try {
-        await db.users.update(
+        await db.poshTrainings.update(
             {
                 quizCompleted: true,
                 quizScore: req.body.quizScore,
@@ -141,7 +142,7 @@ exports.login = async (req, res) => {
     try {
         const { email, employeeId, loginType } = req.body;
 
-        const user = await db.users.findOne({
+        const user = await db.poshTrainings.findOne({
             where: { email, employeeId },
             order: [["id", "DESC"]],
         });
@@ -197,7 +198,7 @@ exports.login = async (req, res) => {
 
 exports.findOneByEmail = async (req, res) => {
     try {
-        const users = await db.users.findAll({ 
+        const users = await db.poshTrainings.findAll({ 
             where: { email: req.params.email },
             order: [["id", "ASC"]]
             });
@@ -231,77 +232,127 @@ exports.findOneByEmail = async (req, res) => {
 };
 
 
-exports.googleLogin = async (req, res) => {
+// exports.googleLogin = async (req, res) => {
+//     try {
+//         const { credential } = req.body;
+//         const ticket = await client.verifyIdToken({
+//             idToken: credential,
+//             audience: process.env.GOOGLE_CLIENT_ID
+//         });
+
+//         const payload = ticket.getPayload();
+//         const email = payload.email;
+//         const name = payload.name;
+//         const ipAddress =
+//                 req.headers["x-forwarded-for"]?.split(",")[0] ||
+//                 req.socket.remoteAddress ||
+//                 req.ip;
+//         console.log("ipAddress===========",ipAddress);
+//         let user = await db.poshTrainings.findOne({
+//             where: { email },
+//             order: [["completedAt", "DESC"]]
+//         });
+//         if (!user) {
+//             // return res.status(404).json({ success: false, message: "Employee not found." });
+//             user = await db.poshTrainings.create({
+//                 name,
+//                 employeeId: `G-${Math.floor(Math.random() * 1000) .toString() .padStart(3, "0")}`,
+//                 email,
+//                 quizScore: 0,
+//                 ipAddress,
+//                 quizCompleted: false,
+//                 acknowledged: false,
+//             });
+//         }
+//         const data = user.toJSON();
+
+//         let mustRetakeTraining = false;
+
+//         // Never completed training
+//         if (!data.completedAt) {
+//             mustRetakeTraining = true;
+//         } else {
+//             const completed = new Date(data.completedAt);
+//             const today = new Date();
+
+//             const monthsSinceTraining =
+//                 (today.getFullYear() - completed.getFullYear()) * 12 +
+//                 (today.getMonth() - completed.getMonth());
+
+//             // Retake if training is 6+ months old OR quiz failed
+//             mustRetakeTraining =
+//                 monthsSinceTraining >= 6 || Number(data.quizScore || 0) < 4;
+
+//             console.log({
+//                 monthsSinceTraining,
+//                 quizScore: data.quizScore,
+//                 mustRetakeTraining,
+//             });
+//         }
+
+//         data.mustRetakeTraining = mustRetakeTraining;
+
+//         return res.json({ success: true, data, //isUserLogin: true 
+
+//         });
+
+//     } catch (err) {
+//         console.error("Google login error:", err);
+//         return res.status(500).json({
+//             success: false,
+//             message: err.message
+//         });
+
+//     }
+
+// };
+
+exports.findOneByEmployeeId = async (req, res) => {
     try {
-        const { credential } = req.body;
-        const ticket = await client.verifyIdToken({
-            idToken: credential,
-            audience: process.env.GOOGLE_CLIENT_ID
-        });
-
-        const payload = ticket.getPayload();
-        const email = payload.email;
-        const name = payload.name;
-        const ipAddress =
-                req.headers["x-forwarded-for"]?.split(",")[0] ||
-                req.socket.remoteAddress ||
-                req.ip;
-        console.log("ipAddress===========",ipAddress);
-        let user = await db.users.findOne({
-            where: { email },
-            order: [["completedAt", "DESC"]]
-        });
-        if (!user) {
-            // return res.status(404).json({ success: false, message: "Employee not found." });
-            user = await db.users.create({
-                name,
-                employeeId: `G-${Math.floor(Math.random() * 1000) .toString() .padStart(3, "0")}`,
-                email,
-                quizScore: 0,
-                ipAddress,
-                quizCompleted: false,
-                acknowledged: false,
+        const training = await db.poshTrainings.findOne({ where: { employeeId: req.params.employeeId } });
+        // if (!employee) {
+        //     return res.status(404).json({ success: false, message: "Employee not found" });
+        // }
+        // res.json({ success: true, data: employee });
+        if (!training) {
+            const employee = await db.users.findOne({
+            where: {
+                id: req.params.employeeId,
+            },
+            attributes: [
+                ["id", "employeeId"],
+                "name",
+                "email",
+                ["technology", "department"],
+                ["designation","role"],
+                [
+                Sequelize.literal(`
+                    CASE
+                    WHEN LOWER(location) LIKE '%delhi%' THEN 'Delhi'
+                    WHEN LOWER(location) LIKE '%usa%' THEN 'USA'
+                    ELSE 'Gurgaon'
+                    END
+                `),
+                "city",
+                ],
+                [
+                Sequelize.literal(`
+                    CASE
+                    WHEN role NOT IN (0, 1) THEN TRUE
+                    ELSE FALSE
+                    END
+                `),
+                "isUserLogin",
+                ],
+            ],
             });
+            return res.json({ success: true, exists: false, data: employee });
         }
-        const data = user.toJSON();
-
-        let mustRetakeTraining = false;
-
-        // Never completed training
-        if (!data.completedAt) {
-            mustRetakeTraining = true;
-        } else {
-            const completed = new Date(data.completedAt);
-            const today = new Date();
-
-            const monthsSinceTraining =
-                (today.getFullYear() - completed.getFullYear()) * 12 +
-                (today.getMonth() - completed.getMonth());
-
-            // Retake if training is 6+ months old OR quiz failed
-            mustRetakeTraining =
-                monthsSinceTraining >= 6 || Number(data.quizScore || 0) < 4;
-
-            console.log({
-                monthsSinceTraining,
-                quizScore: data.quizScore,
-                mustRetakeTraining,
-            });
+        else{
+            return res.json({ success: true, exists: true, data: training });
         }
-
-        data.mustRetakeTraining = mustRetakeTraining;
-
-        return res.json({ success: true, data, //isUserLogin: true 
-
-        });
 
     } catch (err) {
-        console.error("Google login error:", err);
-        return res.status(500).json({
-            success: false,
-            message: err.message
-        });
-
+        res.status(500).json({ success: false, message: err.message });
     }
-
 };

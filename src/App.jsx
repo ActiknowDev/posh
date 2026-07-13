@@ -56,6 +56,17 @@ export default function App() {
   const [completions, setCompletions] = useState([]);
   const [showICDirectoryModal, setShowICDirectoryModal] = useState(false);
 
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      localStorage.clear();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
   // Load state from localStorage on mount
   useEffect(() => {
     const savedConfig = localStorage.getItem('posh_config');
@@ -231,28 +242,19 @@ export default function App() {
   };
 
   const handleResetSession = () => {
-    // if (window.confirm('Do you want to reset your current employee training session? This clears your test score and acknowledgment signature.')) {
-    if (window.confirm('Do you want to logout? This will clear your current employee training session and acknowledgment signature.')) {
-      const cleanSession = DEFAULT_SESSION
-    //   {
-    //     name: '',
-    //     email: '',
-    //     employeeId: '',
-    //     department: 'Engineering',
-    //     role: '',
-    //     city: 'Delhi',
-    //     isRegistered: false,
-    //     currentSlideIndex: 0,
-    //     completedSlides: [],
-    //     quizAnswers: {},
-    //     quizCompleted: false,
-    //     quizScore: 0,
-    //     acknowledged: false,        
-    //     signatureSubmitted: false,
-    //   };
-      setSession(cleanSession);
-      localStorage.setItem('posh_session', JSON.stringify(cleanSession));
-      setViewMode('training');
+    // if (window.confirm('Do you want to logout? This will clear your current employee training session and acknowledgment signature.')) {
+    //   const cleanSession = DEFAULT_SESSION
+    //   setSession(cleanSession);
+    //   localStorage.setItem('posh_session', JSON.stringify(cleanSession));
+    //   setViewMode('training');
+    // }
+    if (window.confirm('Do you want to close this? This will clear your current employee training session and acknowledgment signature.')) {
+      // sessionStorage.clear(); // or sessionStorage.removeItem("user");
+      localStorage.setItem('posh_config', JSON.stringify(DEFAULT_CONFIG));
+      localStorage.setItem('posh_session', JSON.stringify(DEFAULT_SESSION));
+      localStorage.setItem('posh_completions', JSON.stringify([]));
+
+      window.close();
     }
   };
 
@@ -320,9 +322,9 @@ export default function App() {
                 className="text-[10px] text-slate-500 hover:text-accent font-mono bg-white border border-slate-400 shadow-4xs px-3 py-1.5 transition-colors cursor-pointer flex items-center gap-1 rounded-md"
                 id="reset-training-session-btn"
               >
-                <RefreshCw className="w-3 h-3" />
+                {/* <RefreshCw className="w-3 h-3" /> */}
                 {/* <span>Restart Session</span> */}
-                <span>Logout</span>
+                <span>Close</span>
               </button>
             </div>
           )}
@@ -360,7 +362,8 @@ export default function App() {
             config={config}
             onAddCompletion={handleAddCompletion}
             goToLogin={() => setViewMode("login")}
-            onLoginSuccess={() => setViewMode("admin")}
+            // onLoginSuccess={() => setViewMode("admin")}
+            onLoginSuccess={() => setViewMode("training")}
             viewMode={viewMode}
             />
         )}

@@ -5,7 +5,7 @@ const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
   host: dbConfig.HOST,
   dialect: dbConfig.dialect,
   operatorsAliases: false,
-  logging: false,
+  logging: true,
   pool: {
     max: dbConfig.pool.max,
     min: dbConfig.pool.min,
@@ -21,5 +21,18 @@ db.sequelize = sequelize;
 
 db.users = require("./user.model.js")(sequelize, Sequelize);
 db.config = require("./config.model.js")(sequelize, Sequelize);
+db.poshTrainings = require("./poshTraining.model.js")(sequelize, Sequelize);
+
+db.poshTrainings.belongsTo(db.users, {
+  foreignKey: "employeeId",
+  targetKey: "id",
+  as: "user"
+});
+
+db.users.hasMany(db.poshTrainings, {
+  foreignKey: "employeeId",
+  sourceKey: "id",
+  as: "trainings",
+});
 
 module.exports = db;
