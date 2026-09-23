@@ -4,13 +4,13 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Settings, Users, ClipboardCheck, ArrowDownToLine, 
+import { Settings, Users, ClipboardCheck, ArrowDownToLine, 
   Search, RefreshCw, Layers, Database, Mail, ShieldAlert,
   Sliders, UserCheck, Trash2, Calendar, MapPin
 } from 'lucide-react';
 
 import { getUsers, saveConfig } from "./../services/user";
+import * as XLSX from "xlsx";
 
 export default function AdminPortal({
   config,
@@ -70,42 +70,48 @@ export default function AdminPortal({
     }    
     // showToast('IC & Module Configuration Saved Successfully!');
   };
-
-  const handleExportCSV = () => {
-    if (completions.length === 0) {
-      showToast('No compliance records to export yet.');
-      return;
-    }
-    
-    const headers = ['Record ID', 'Employee Name', 'Email', 'Employee ID', 'Department', 'Role', 'Location/City', 'Quiz Score', 'Completion Date', 'Acknowledgement Status'];
-    const rows = completions.map((r) => [
-        String(r.id ?? ''),
-        r.name ?? '',
-        r.email ?? '',
-        r.employeeId ?? '',
-        r.department ?? '',
-        r.role ?? '',
-        r.city ?? '',
-        `${r.quizScore ?? 0}/5`,
-        r.completedAt ?? '',
-        r.acknowledged ? 'Signed' : 'Pending'
-    ]);
-
-    const csvContent = [
-      headers.join(','),
-      ...rows.map((row) => row.map((val) => `"${val.replace(/"/g, '""')}"`).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `POSH_Compliance_Report_${new Date().getFullYear()}_${new Date().getMonth() + 1}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast('CSV Compliance Report Exported!');
-  };
+  const handleExportExcel = () => {
+  if (filteredCompletions.length === 0) {
+    showToast("No compliance records to export yet.");
+    return;
+  }
+  const excelData = filteredCompletions.map((r) => ({
+    "Record ID": r.id ?? "",
+    "Employee Name": r.name ?? "",
+    "Email": r.email ?? "",
+    "Employee ID": r.employeeId ?? "",
+    "Department": r.department ?? "",
+    "Role": r.role ?? "",
+    "Location/City": r.city ?? "",
+    "Quiz Score": `${r.quizScore ?? 0}/5`,
+    "Completion Date": r.completedAt ?? "",
+    "IP Address": r.ipAddress ?? "",
+    "Acknowledgement Status": r.acknowledged ? "Signed" : "Pending",
+  }));
+  // Convert JSON data into worksheet
+  const worksheet = XLSX.utils.json_to_sheet(excelData);
+  // Create workbook
+  const workbook = XLSX.utils.book_new();
+  // Add worksheet
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Compliance Records");
+  // Set column widths
+  worksheet["!cols"] = [
+    { wch: 12 }, // Record ID
+    { wch: 25 }, // Employee Name
+    { wch: 30 }, // Email
+    { wch: 18 }, // Employee ID
+    { wch: 25 }, // Department
+    { wch: 25 }, // Role
+    { wch: 18 }, // Location
+    { wch: 12 }, // Quiz Score
+    { wch: 22 }, // Completion Date
+    { wch: 18 }, // IP Address
+    { wch: 25 }, // Acknowledgement
+  ];
+  // Export Excel file
+  XLSX.writeFile( workbook, `POSH_Compliance_Report_${new Date().getFullYear()}_${new Date().getMonth() + 1}.xlsx` );
+  showToast("Excel Compliance Report Exported!");
+};
 
 //   const totalAssignedRef = 40;
   const completedHeadcount = completions.length;
@@ -141,7 +147,8 @@ export default function AdminPortal({
 
    useEffect(() => {
         getUsers({ completedAt: "notnull" }).then((users) => {
-            const usersData = users.data.data
+            const usersData = users.data.data;
+            // console.log("usersData====>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",usersData);
             handleOriginalData(usersData);
         });
         getUsers().then((users) => {
@@ -199,21 +206,21 @@ export default function AdminPortal({
           <div className="flex flex-wrap gap-2 mt-8 border-t border-white/10 pt-5">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`px-4 py-2 text-xs font-mono tracking-wider uppercase transition-all rounded-none ${activeTab === 'overview' ? 'bg-accent text-black font-extrabold border-0' : 'text-slate-400 hover:text-white border border-transparent hover:border-white/10 font-bold'}`}
+              className={`px-4 py-2 text-xs font-mono tracking-wider uppercase transition-all rounded-none ${activeTab === 'overview' ? 'bg-accent text-white font-extrabold border-0' : 'text-slate-400 hover:text-white border border-transparent hover:border-white/10 font-bold'}`}
               id="admin-overview-tab"
             >
               ⚡ Compliance Overview
             </button>
             <button
               onClick={() => setActiveTab('records')}
-              className={`px-4 py-2 text-xs font-mono tracking-wider uppercase transition-all rounded-none ${activeTab === 'records' ? 'bg-accent text-black font-extrabold border-0' : 'text-slate-400 hover:text-white border border-transparent hover:border-white/10 font-bold'}`}
+              className={`px-4 py-2 text-xs font-mono tracking-wider uppercase transition-all rounded-none ${activeTab === 'records' ? 'bg-accent text-white font-extrabold border-0' : 'text-slate-400 hover:text-white border border-transparent hover:border-white/10 font-bold'}`}
               id="admin-records-tab"
             >
               📜 Completion Ledger ({completions.length})
             </button>
             <button
               onClick={() => setActiveTab('settings')}
-              className={`px-4 py-2 text-xs font-mono tracking-wider uppercase transition-all rounded-none ${activeTab === 'settings' ? 'bg-accent text-black font-extrabold border-0' : 'text-slate-400 hover:text-white border border-transparent hover:border-white/10 font-bold'}`}
+              className={`px-4 py-2 text-xs font-mono tracking-wider uppercase transition-all rounded-none ${activeTab === 'settings' ? 'bg-accent text-white font-extrabold border-0' : 'text-slate-400 hover:text-white border border-transparent hover:border-white/10 font-bold'}`}
               id="admin-settings-tab"
             >
               ⚙️ IC & Policy Setup
@@ -417,12 +424,14 @@ export default function AdminPortal({
                 </select>
 
                 <button
-                  onClick={handleExportCSV}
-                  className="px-4 py-2.5 bg-accent hover:bg-accent/90 text-black font-extrabold text-xs rounded-none flex items-center gap-1.5 transition shadow-lg cursor-pointer uppercase tracking-wider"
+                  // onClick={handleExportCSV}
+                  onClick={handleExportExcel}
+                  className="px-4 py-2.5 bg-accent hover:bg-accent/90 text-white font-extrabold text-xs rounded-none flex items-center gap-1.5 transition shadow-lg cursor-pointer uppercase tracking-wider"
                   id="export-csv-btn"
                 >
                   <ArrowDownToLine className="w-3.5 h-3.5" />
-                  <span>Export CSV Log</span>
+                  {/* <span>Export CSV Log</span> */}
+                  <span>Export Excel Log</span>
                 </button>
               </div>
             </div>
@@ -437,6 +446,7 @@ export default function AdminPortal({
                     <th className="px-6 py-3.5 font-mono text-[10px] tracking-wider uppercase font-bold text-slate-300">Office Location</th>
                     <th className="px-6 py-3.5 font-mono text-[10px] tracking-wider uppercase font-bold text-slate-300 text-center">Test Score</th>
                     <th className="px-6 py-3.5 font-mono text-[10px] tracking-wider uppercase font-bold text-slate-300">Completed Date</th>
+                    <th className="px-6 py-3.5 font-mono text-[10px] tracking-wider uppercase font-bold text-slate-300">IP Address</th>
                     <th className="px-6 py-3.5 font-mono text-[10px] tracking-wider uppercase font-bold text-slate-300 text-center">Acknowledge</th>
                   </tr>
                 </thead>
@@ -454,7 +464,7 @@ export default function AdminPortal({
                         <td className="px-6 py-4">
                           <div className="font-extrabold text-white text-sm leading-tight uppercase font-display">{r.name}</div>
                           <div className="text-xs text-slate-400 font-mono mt-0.5">{r.email}</div>
-                          <div className="text-[10px] text-accent font-semibold font-mono uppercase mt-0.5">{r.role}</div>
+                          <div className="text-[10px] text-yellow-400 font-semibold font-mono uppercase mt-0.5">{r.role}</div>
                         </td>
                         <td className="px-6 py-4 font-mono text-xs">{r.employeeId}</td>
                         <td className="px-6 py-4">
@@ -469,15 +479,22 @@ export default function AdminPortal({
                           </div>
                         </td>
                         <td className="px-6 py-4 text-center">
-                          <span className={`px-2.5 py-0.5 rounded-none font-bold text-xs font-mono uppercase border ${r.quizScore >= config.passingScore ? 'bg-accent/10 text-accent border-accent/25' : 'bg-rose-950/20 text-rose-400 border-rose-900/30'}`}>
-                            {r.quizScore} / 5
+                          <span className={`inline-block whitespace-nowrap px-2.5 py-0.5 rounded-none font-bold text-xs font-mono uppercase border ${
+                              Number(r.quizScore) >= Number(config.passingScore)
+                                ? 'bg-accent/10 text-yellow-400 border-accent/25'
+                                : 'bg-rose-950/20 text-rose-400 border-rose-900/30'
+                            }`} >
+                            {Number(r.quizScore) || 0}/5
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-slate-400 font-mono text-xs">
                           {r.completedAt}
                         </td>
+                         <td className="px-6 py-4 whitespace-nowrap text-slate-400 font-mono text-xs">
+                          {r.ipAddress || "N/A"}
+                        </td>
                         <td className="px-6 py-4 text-center">
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold tracking-wider font-mono text-accent bg-accent/10 px-2.5 py-0.5 border border-accent/25 uppercase rounded-none">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold tracking-wider font-mono text-yellow-400 bg-accent/10 px-2.5 py-0.5 border border-accent/25 uppercase rounded-none">
                             Signed
                           </span>
                         </td>

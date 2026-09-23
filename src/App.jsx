@@ -4,9 +4,7 @@
  */
 import "./services/interceptor";
 import React, { useState, useEffect } from 'react';
-import { 
-  ShieldCheck, HelpCircle, Users, Settings, 
-  RefreshCw, Layout, GraduationCap, FileSpreadsheet, Lock, FileText 
+import {  ShieldCheck, HelpCircle, Users, Settings, RefreshCw, Layout, GraduationCap, FileSpreadsheet, Lock, FileText 
 } from 'lucide-react';
 import TrainingModule from './components/TrainingModule';
 import AdminPortal from './components/AdminPortal';
@@ -14,6 +12,27 @@ import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 
 import { getConfigs } from "./services/user";
+
+const params = new URLSearchParams(window.location.search);
+const employeeId = params.get("employeeId");
+const role = params.get("role");
+
+const roles = {
+    4: "Manager",
+    5: "Tech Lead",
+    6: "BD",
+    7: "Developer",
+    8: "Designer",
+    9: "Reporting",
+    10: "All Project",
+    11: "Support",
+    12: "Management",
+    13: "Expertal"
+};
+const userRoles = role
+    ? role.split(",").map(Number)
+    : [];
+const hasAdminAccess = userRoles.includes(4) //|| userRoles.includes(12);
 
 // Seeding Default POSH configurations (Actiknow compliance defaults)
 const DEFAULT_CONFIG = {
@@ -35,9 +54,9 @@ const DEFAULT_CONFIG = {
 const DEFAULT_SESSION = {
   name: '',
   email: '',
-  employeeId: '',
+  employeeId: employeeId,
   department: 'Web App Development',
-  role: '',//'Software Engineer',
+  role: role,//'Software Engineer',
   city: 'Delhi',//'Bengaluru',
   isRegistered: false,
   currentSlideIndex: 0,
@@ -60,9 +79,7 @@ export default function App() {
     const handleBeforeUnload = () => {
       localStorage.clear();
     };
-
     window.addEventListener("beforeunload", handleBeforeUnload);
-
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
@@ -288,8 +305,18 @@ export default function App() {
                 <GraduationCap className="w-4 h-4" />
                 <span className="hidden sm:inline">Training</span>
               </button>
+
+              {session.isUserLogin && (<button
+                onClick={() => setViewMode('dasboard')}
+                className={`px-3 py-1.5 md:px-4 md:py-1.5 text-[10px] md:text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer rounded-md ${viewMode === 'dasboard' ? 'bg-accent text-white shadow-sm' : 'text-slate-600 hover:text-accent'}`}
+                id="switch-admin-mode-btn"
+              >
+                <Settings className="w-4 h-4" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </button>)}
+
             {/* )} */}
-            {/* {!session.isUserLogin && ( */}
+            { hasAdminAccess && (
               <button
                 onClick={() => setViewMode('admin')}
                 className={`px-3 py-1.5 md:px-4 md:py-1.5 text-[10px] md:text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer rounded-md ${viewMode === 'admin' ? 'bg-accent text-white shadow-sm' : 'text-slate-600 hover:text-accent'}`}
@@ -298,7 +325,7 @@ export default function App() {
                 <Settings className="w-4 h-4" />
                 <span className="hidden sm:inline">Admin Panel</span>
               </button>
-           {/* )} */}
+            )}
             </div>
 
             {/* Global Directory button always available */}
@@ -375,8 +402,7 @@ export default function App() {
             onChangeSession={handleUpdateSession}
             />
         )}
-
-        {viewMode === "admin" && (
+        {/* {viewMode === "admin" && (
             session.isUserLogin ? (
                 <Dashboard
                     userSession={session}
@@ -393,9 +419,8 @@ export default function App() {
                     handleOriginalData={handleOriginalData}
                 />
             )
-        )}
-
-        {/* {viewMode === "dashboard" && (
+        )} */}
+        { (viewMode === "dasboard" && session.isUserLogin) && (
             <Dashboard
             userSession={session}
             onLogout={() => setViewMode("training")}
@@ -412,7 +437,7 @@ export default function App() {
             onSeedMockData={handleSeedMockData}
             handleOriginalData={handleOriginalData}
             />
-        )} */}
+        )}
 
         </main>
 
