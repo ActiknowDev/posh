@@ -17,4 +17,6 @@ module.exports = app => {
   app.put(`${process.env.API_PREFIX}/users/:id/complete`, controller.completeTraining);
   // app.post(`${process.env.API_PREFIX}/users/google-login`, controller.googleLogin);
   app.get(`${process.env.API_PREFIX}/users/:employeeId`, controller.findOneByEmployeeId);
+  
+  app.get(`${process.env.API_PREFIX}/usersDesignations`, controller.getUsersDesignations);
 }

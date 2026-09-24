@@ -35,3 +35,7 @@ export const getConfigs = (requestData) => {
 export const loadEmployee = (employeeId) => {
    return axios.get(`/users/${employeeId}`);
 }
+
+export const getdesignations = (requestData) => {
+   return axios.get('/usersDesignations', {params: requestData});
+}

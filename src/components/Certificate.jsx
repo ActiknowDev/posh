@@ -67,7 +67,7 @@ export default function Certificate({ userSession, config }) {
   };
 
   const getCertificateId = () => {
-    const raw = `${userSession.employeeId || 'EMP'}-${userSession.role || 'DESIG'}-${config.companyName || 'CO'}`;
+    const raw = `C00${userSession.employeeId || 'EMP'}-${userSession.role || 'DESIG'}-${config.companyName || 'CO'}`;
     let hash = 0;
     for (let i = 0; i < raw.length; i++) {
       hash = (hash << 5) - hash + raw.charCodeAt(i);
@@ -124,7 +124,8 @@ export default function Certificate({ userSession, config }) {
               {userSession.name || 'Valued Employee'}
             </span>
             <span className="text-xs text-slate-500 block mt-2 font-mono">
-              Emp ID: <strong className="text-slate-900">{userSession.employeeId || 'N/A'}</strong> • Desig: <strong className="text-slate-900">{userSession.role || 'N/A'}</strong>
+              Emp ID: <strong className="text-slate-900">{userSession.employeeId ? `C00${userSession.employeeId}` : 'N/A'}</strong> 
+              • Desig: <strong className="text-slate-900">{userSession.role || 'N/A'}</strong>
             </span>
           </div>
 

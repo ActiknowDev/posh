@@ -1,36 +1,18 @@
 const db = require('../models');
-// const { Sequelize } = require("sequelize");
 const { Op, Sequelize } = require("sequelize");
-// const { OAuth2Client } = require("google-auth-library");
-// const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 exports.findAll = async (req, res) => {
     try {
         const where = {};
-
         if (req.query.completedAt === "notnull") {
-            where.completedAt = {
-                [Op.not]: null,
-            };
+            where.completedAt = { [Op.not]: null, };
         }
-
-        const users = await db.poshTrainings.findAll({
-            where,
-        });
-
-        return res.status(200).send({
-            success: true,
-            message: 'users fetched successfully',
-            data: users
-        });
+        const users = await db.poshTrainings.findAll({ where });
+        return res.status(200).send({ success: true, message: 'users fetched successfully', data: users });
 
     } catch (error) {
         console.error('Error fetching users:', error);
-
-        return res.status(500).send({
-            success: false,
-            message: 'Internal server error' + error.message
-        });
+        return res.status(500).send({ success: false, message: 'Internal server error' + error.message });
     }
 };
 
@@ -40,18 +22,12 @@ exports.create = async (req, res) => {
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
         // Get latest training of this employee
-        const latestTraining = await db.poshTrainings.findOne({
-            where: { email: req.body.email },
-            order: [["createdAt", "DESC"]]
-        });
+        const latestTraining = await db.poshTrainings.findOne({ where: { email: req.body.email }, order: [["createdAt", "DESC"]] });
 
         // User has an unfinished training -> continue it
         if (latestTraining && !latestTraining.quizCompleted) {
 
-            const ipAddress =
-                req.headers["x-forwarded-for"]?.split(",")[0] ||
-                req.socket.remoteAddress ||
-                req.ip;
+            const ipAddress = req.headers["x-forwarded-for"]?.split(",")[0] || req.socket.remoteAddress || req.ip;
 
             await latestTraining.update({
                 employeeId: req.body.employeeId,
@@ -62,27 +38,18 @@ exports.create = async (req, res) => {
                 ipAddress
             });
 
-            return res.status(200).json({
-                success: true,
-                message: "Continuing existing training.",
-                data: latestTraining
-            });
+            return res.status(200).json({ success: true, message: "Continuing existing training.", data: latestTraining });
         }
 
         // User passed within last 6 months
         if ( latestTraining && latestTraining.quizCompleted && latestTraining.quizScore >= 4 && latestTraining.completedAt &&
             new Date(latestTraining.completedAt) >= sixMonthsAgo ) 
             {
-                return res.status(400).json({
-                    success: false, message: "You have already completed the training successfully. You can retake it after 6 months."
-                });
+                return res.status(400).json({ success: false, message: "You have already completed the training successfully. You can retake it after 6 months." });
             }
 
         // Otherwise create a new training
-        const ipAddress =
-            req.headers["x-forwarded-for"]?.split(",")[0] ||
-            req.socket.remoteAddress ||
-            req.ip;
+        const ipAddress = req.headers["x-forwarded-for"]?.split(",")[0] || req.socket.remoteAddress || req.ip;
 
         const user = await db.poshTrainings.create({
             employeeId: req.body.employeeId,
@@ -91,22 +58,14 @@ exports.create = async (req, res) => {
             department: req.body.department,
             role: req.body.role,
             city: req.body.city,
-
             isRegistered: true,
             startedAt: new Date(),
-
             ipAddress
         });
-
-        return res.status(201).json({
-            success: true,
-            message: "User created successfully.",
-            data: user
-        });
+        return res.status(201).json({ success: true, message: "User created successfully.", data: user });
 
     } catch (err) {
         console.error(err);
-
         return res.status(500).json({
             success: false,
             message: err.message
@@ -231,128 +190,37 @@ exports.findOneByEmail = async (req, res) => {
     }
 };
 
-
-// exports.googleLogin = async (req, res) => {
-//     try {
-//         const { credential } = req.body;
-//         const ticket = await client.verifyIdToken({
-//             idToken: credential,
-//             audience: process.env.GOOGLE_CLIENT_ID
-//         });
-
-//         const payload = ticket.getPayload();
-//         const email = payload.email;
-//         const name = payload.name;
-//         const ipAddress =
-//                 req.headers["x-forwarded-for"]?.split(",")[0] ||
-//                 req.socket.remoteAddress ||
-//                 req.ip;
-//         console.log("ipAddress===========",ipAddress);
-//         let user = await db.poshTrainings.findOne({
-//             where: { email },
-//             order: [["completedAt", "DESC"]]
-//         });
-//         if (!user) {
-//             // return res.status(404).json({ success: false, message: "Employee not found." });
-//             user = await db.poshTrainings.create({
-//                 name,
-//                 employeeId: `G-${Math.floor(Math.random() * 1000) .toString() .padStart(3, "0")}`,
-//                 email,
-//                 quizScore: 0,
-//                 ipAddress,
-//                 quizCompleted: false,
-//                 acknowledged: false,
-//             });
-//         }
-//         const data = user.toJSON();
-
-//         let mustRetakeTraining = false;
-
-//         // Never completed training
-//         if (!data.completedAt) {
-//             mustRetakeTraining = true;
-//         } else {
-//             const completed = new Date(data.completedAt);
-//             const today = new Date();
-
-//             const monthsSinceTraining =
-//                 (today.getFullYear() - completed.getFullYear()) * 12 +
-//                 (today.getMonth() - completed.getMonth());
-
-//             // Retake if training is 6+ months old OR quiz failed
-//             mustRetakeTraining =
-//                 monthsSinceTraining >= 6 || Number(data.quizScore || 0) < 4;
-
-//             console.log({
-//                 monthsSinceTraining,
-//                 quizScore: data.quizScore,
-//                 mustRetakeTraining,
-//             });
-//         }
-
-//         data.mustRetakeTraining = mustRetakeTraining;
-
-//         return res.json({ success: true, data, //isUserLogin: true 
-
-//         });
-
-//     } catch (err) {
-//         console.error("Google login error:", err);
-//         return res.status(500).json({
-//             success: false,
-//             message: err.message
-//         });
-
-//     }
-
-// };
-
 exports.findOneByEmployeeId = async (req, res) => {
     try {
         const training = await db.poshTrainings.findOne({ where: { employeeId: req.params.employeeId } });
-        // if (!employee) {
-        //     return res.status(404).json({ success: false, message: "Employee not found" });
-        // }
-        // res.json({ success: true, data: employee });
         if (!training) {
-            const employee = await db.users.findOne({
-            where: {
-                id: req.params.employeeId,
-            },
-            attributes: [
-                ["id", "employeeId"],
-                "name",
-                "email",
-                ["technology", "department"],
-                ["designation","role"],
-                [
-                Sequelize.literal(`
-                    CASE
-                    WHEN LOWER(location) LIKE '%delhi%' THEN 'Delhi'
-                    WHEN LOWER(location) LIKE '%usa%' THEN 'USA'
-                    ELSE 'Gurgaon'
-                    END
-                `),
-                "city",
+            const employee = await db.users.findOne({ where: { id: req.params.employeeId, },
+                attributes: [ ["id", "employeeId"], "name", "email", ["technology", "department"], ["designation","role"],
+                    [ Sequelize.literal(` CASE WHEN LOWER(location) LIKE '%delhi%' THEN 'Delhi' WHEN LOWER(location) LIKE '%usa%' THEN 'USA' ELSE 'Gurgaon' END `), "city" ],
+                    [ Sequelize.literal(` CASE WHEN role NOT IN (0, 1) THEN TRUE ELSE FALSE END `), "isUserLogin" ],
                 ],
-                [
-                Sequelize.literal(`
-                    CASE
-                    WHEN role NOT IN (0, 1) THEN TRUE
-                    ELSE FALSE
-                    END
-                `),
-                "isUserLogin",
-                ],
-            ],
             });
             return res.json({ success: true, exists: false, data: employee });
-        }
-        else{
+        } else {
             return res.json({ success: true, exists: true, data: training });
         }
-
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+exports.getUsersDesignations = async (req, res) => {
+    try {
+        const designations = await db.users.findAll({
+            attributes: [ [db.sequelize.fn('TRIM', db.sequelize.col('designation')), 'role'] ],
+            where: { status: 1, deleted: 1, designation: { [Op.not]: null, [Op.ne]: ' ' } },
+            group: [ db.sequelize.fn('TRIM', db.sequelize.col('designation')) ],
+            order: [ [db.sequelize.fn('TRIM', db.sequelize.col('designation')), 'ASC'] ],
+            raw: true
+        });
+        return res.status(200).send({ success: true, message: 'Designations fetched successfully', data: designations });
+    } catch (error) {
+        console.error('Error fetching designations:', error);
+        return res.status(500).send({ success: false, message: 'Internal server error: ' + error.message });
     }
 };

@@ -9,7 +9,7 @@ import { Settings, Users, ClipboardCheck, ArrowDownToLine,
   Sliders, UserCheck, Trash2, Calendar, MapPin
 } from 'lucide-react';
 
-import { getUsers, saveConfig } from "./../services/user";
+import { getUsers, saveConfig, getdesignations } from "./../services/user";
 import * as XLSX from "xlsx";
 
 export default function AdminPortal({
@@ -26,6 +26,9 @@ export default function AdminPortal({
   const [searchQuery, setSearchQuery] = useState('');
   const [deptFilter, setDeptFilter] = useState('all');
   const [cityFilter, setCityFilter] = useState('all');
+  const [designationFilter, setDesignationFilter] = useState('all');
+
+  const [designations, setDesignations] = useState([]);
 
   const [companyName, setCompanyName] = useState(config.companyName);
   const [presidingOfficer, setPresidingOfficer] = useState(config.presidingOfficer);
@@ -39,6 +42,17 @@ export default function AdminPortal({
   const [totalAssignedRef, setTotalAssignedRef] = useState(0);
 
   const [toast, setToast] = useState(null);
+
+  const [searchDesignation, setSearchDesignation] = useState("");
+  const [designationOpen, setDesignationOpen] = useState(false);
+
+  const formatDateTime = (date) => {
+    if (!date) return "";
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "";
+    const pad = (num) => String(num).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  };
 
   const showToast = (msg) => {
     setToast(msg);
@@ -71,57 +85,56 @@ export default function AdminPortal({
     // showToast('IC & Module Configuration Saved Successfully!');
   };
   const handleExportExcel = () => {
-  if (filteredCompletions.length === 0) {
-    showToast("No compliance records to export yet.");
-    return;
-  }
-  const excelData = filteredCompletions.map((r) => ({
-    "Record ID": r.id ?? "",
-    "Employee Name": r.name ?? "",
-    "Email": r.email ?? "",
-    "Employee ID": r.employeeId ?? "",
-    "Department": r.department ?? "",
-    "Role": r.role ?? "",
-    "Location/City": r.city ?? "",
-    "Quiz Score": `${r.quizScore ?? 0}/5`,
-    "Completion Date": r.completedAt ?? "",
-    "IP Address": r.ipAddress ?? "",
-    "Acknowledgement Status": r.acknowledged ? "Signed" : "Pending",
-  }));
-  // Convert JSON data into worksheet
-  const worksheet = XLSX.utils.json_to_sheet(excelData);
-  // Create workbook
-  const workbook = XLSX.utils.book_new();
-  // Add worksheet
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Compliance Records");
-  // Set column widths
-  worksheet["!cols"] = [
-    { wch: 12 }, // Record ID
-    { wch: 25 }, // Employee Name
-    { wch: 30 }, // Email
-    { wch: 18 }, // Employee ID
-    { wch: 25 }, // Department
-    { wch: 25 }, // Role
-    { wch: 18 }, // Location
-    { wch: 12 }, // Quiz Score
-    { wch: 22 }, // Completion Date
-    { wch: 18 }, // IP Address
-    { wch: 25 }, // Acknowledgement
-  ];
-  // Export Excel file
-  XLSX.writeFile( workbook, `POSH_Compliance_Report_${new Date().getFullYear()}_${new Date().getMonth() + 1}.xlsx` );
-  showToast("Excel Compliance Report Exported!");
-};
+    if (filteredCompletions.length === 0) {
+      showToast("No compliance records to export yet.");
+      return;
+    }
+    const excelData = filteredCompletions.map((r) => ({
+      "Record ID": r.id ?? "",
+      "Employee Name": r.name ?? "",
+      "Email": r.email ?? "",
+      "Employee ID": r.employeeId ? `COO${r.employeeId}` : "",
+      // "Department": r.department ?? "",
+      "Designation": r.role ?? "",
+      "Location/City": r.city ?? "",
+      "Quiz Score": `${r.quizScore ?? 0}/5`,
+      "Completion Date": formatDateTime(r.completedAt),
+      "IP Address": r.ipAddress ?? "",
+      "Acknowledgement Status": r.acknowledged ? "Signed" : "Pending",
+    }));
+    // Convert JSON data into worksheet
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    // Create workbook
+    const workbook = XLSX.utils.book_new();
+    // Add worksheet
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Compliance Records");
+    // Set column widths
+    worksheet["!cols"] = [
+      { wch: 12 }, // Record ID
+      { wch: 25 }, // Employee Name
+      { wch: 30 }, // Email
+      { wch: 18 }, // Employee ID
+      // { wch: 25 }, // Department
+      { wch: 25 }, // Role
+      { wch: 18 }, // Location
+      { wch: 12 }, // Quiz Score
+      { wch: 22 }, // Completion Date
+      { wch: 18 }, // IP Address
+      { wch: 25 }, // Acknowledgement
+    ];
+    // Export Excel file
+    XLSX.writeFile( workbook, `POSH_Compliance_Report_${new Date().getFullYear()}_${new Date().getMonth() + 1}.xlsx` );
+    showToast("Excel Compliance Report Exported!");
+  };
 
 //   const totalAssignedRef = 40;
   const completedHeadcount = completions.length;
   const pendingHeadcount = Math.max(0, totalAssignedRef - completedHeadcount);
-  console.log(completedHeadcount , totalAssignedRef);
-  const completionRate = Math.round((completedHeadcount / totalAssignedRef) * 100);
+  const completionRate = totalAssignedRef > 0 ? Math.round((completedHeadcount / totalAssignedRef) * 100) : 0;
 
-  const departments = ['Web App Development','BI','Accounts','Mobile App Development','Human Resources','Sales & Marketing','Operations','Product Management','Others'];
-  const deptCompletions = departments.reduce((acc, dept) => {
-    acc[dept] = completions.filter((c) => c.department === dept).length;
+  const deptCompletions = designations.reduce((acc, item) => {
+    const role = item.role;
+    acc[role] = completions.filter( (c) => c.role === role ).length;
     return acc;
   }, {});
 
@@ -136,25 +149,42 @@ export default function AdminPortal({
     : '0.0';
 
   const filteredCompletions = completions.filter((r) => {
-    const matchesSearch = 
-      r.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      r.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.employeeId.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesDept = deptFilter === 'all' || r.department === deptFilter;
+    const search = searchQuery.toLowerCase();
+
+    const matchesSearch =
+      (r.name || '').toLowerCase().includes(search) ||
+      (r.email || '').toLowerCase().includes(search) ||
+      (r.employeeId || '').toLowerCase().includes(search);
+
+    const matchesDesignation = designationFilter === 'all' || r.role === designationFilter;
     const matchesCity = cityFilter === 'all' || r.city === cityFilter;
-    return matchesSearch && matchesDept && matchesCity;
+    return matchesSearch && matchesDesignation && matchesCity;
   });
 
-   useEffect(() => {
-        getUsers({ completedAt: "notnull" }).then((users) => {
-            const usersData = users.data.data;
-            // console.log("usersData====>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",usersData);
-            handleOriginalData(usersData);
-        });
-        getUsers().then((users) => {
-            setTotalAssignedRef(users.data.data.length);
-        });     
-    }, []);
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [completedResponse, usersResponse, designationResponse] =
+          await Promise.all([
+            getUsers({ completedAt: "notnull" }),
+            getUsers(),
+            getdesignations(),
+          ]);
+
+        const completedUsers = completedResponse?.data?.data || [];
+        const allUsers = usersResponse?.data?.data || [];
+        const designationData = designationResponse?.data?.data || [];
+
+        handleOriginalData(completedUsers);
+        setTotalAssignedRef(allUsers.length);
+        setDesignations(designationData);
+      } catch (error) {
+        console.error("Failed to load admin portal data:", error);
+      }
+  };
+
+  loadData();
+}, []);
 
   return (
     <div className="bg-slate-950 min-h-screen text-white select-none">
@@ -183,24 +213,6 @@ export default function AdminPortal({
               </p>
             </div>
             
-            {/* <div className="flex items-center gap-2 justify-start md:justify-end">
-              <button 
-                onClick={onSeedMockData} 
-                className="px-3.5 py-2 bg-white/5 hover:bg-white/10 hover:border-white/20 text-slate-300 font-mono font-bold text-[10px] tracking-wider rounded-none uppercase flex items-center gap-1.5 transition-all border border-white/10 cursor-pointer"
-                title="Populates mock staff logs for reporting representation"
-              >
-                <Database className="w-3.5 h-3.5 text-accent" />
-                <span>Seed Sample Data</span>
-              </button>
-              <button 
-                onClick={onClearCompletions} 
-                className="px-3.5 py-2 bg-rose-950/20 hover:bg-rose-950/45 text-rose-300 font-mono font-bold text-[10px] tracking-wider rounded-none uppercase flex items-center gap-1.5 transition border border-rose-900/40 cursor-pointer"
-                title="Clears all compliance training submissions"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Reset Database</span>
-              </button>
-            </div> */}
           </div>
 
           <div className="flex flex-wrap gap-2 mt-8 border-t border-white/10 pt-5">
@@ -282,30 +294,29 @@ export default function AdminPortal({
               <div className="bg-[#0A0A0A] p-6 rounded-none border border-white/10 shadow-xs">
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h3 className="font-extrabold text-white font-display text-base uppercase tracking-tight">Department Statistics</h3>
-                    <p className="text-[10px] text-slate-400 font-mono">CERTIFIED INDIVIDUALS PER CORE OFFICE</p>
+                    <h3 className="font-extrabold text-white font-display text-base uppercase tracking-tight">Designation Statistics</h3>
+                    <p className="text-[10px] text-slate-400 font-mono">CERTIFIED INDIVIDUALS PER DESIGNATION</p>
                   </div>
                   <Layers className="w-4 h-4 text-slate-400" />
                 </div>
 
                 <div className="space-y-4 pt-2">
-                  {departments.map((dept) => {
-                    const count = deptCompletions[dept] || 0;
-                    const maxVal = Math.max(...Object.values(deptCompletions), 1);
-                    const barWidthPercent = Math.max((count / maxVal) * 100, 4);
+                  {designations?.map((item) => {
+                    const role = item.role;
+                    const count = deptCompletions[role] || 0;
+                    const maxVal = Math.max( ...Object.values(deptCompletions), 1 );
+                    const barWidthPercent = Math.max( (count / maxVal) * 100, 4 );
 
                     return (
-                      <div key={dept} className="space-y-1.5">
+                      <div key={role} className="space-y-1.5">
                         <div className="flex justify-between text-xs font-mono">
-                          <span className="text-slate-300 font-bold">{dept.toUpperCase()}</span>
-                          <span className="font-black text-[#CCFF00]">{count} Certified</span>
+                          <span className="text-slate-300 font-bold"> {role ? role.toUpperCase() : ""} </span>
+                          <span className="font-black text-[#CCFF00]"> {count} Certified </span>
                         </div>
+
                         <div className="flex items-center">
                           <div className="w-full bg-white/10 h-2.5 rounded-none">
-                            <div 
-                              className="bg-[#CCFF00] h-2.5 rounded-none transition-all duration-500"
-                              style={{ width: `${barWidthPercent}%` }}
-                            ></div>
+                            <div className="bg-[#CCFF00] h-2.5 rounded-none transition-all duration-500" style={{ width: `${barWidthPercent}%` }} />
                           </div>
                         </div>
                       </div>
@@ -399,17 +410,44 @@ export default function AdminPortal({
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <select
-                  value={deptFilter}
-                  onChange={(e) => setDeptFilter(e.target.value)}
-                  className="bg-[#0A0A0A] text-white border border-white/10 px-3 py-2 text-xs font-mono rounded-none uppercase focus:ring-1 focus:ring-accent focus:outline-hidden"
-                  id="dept-filter"
-                >
-                  <option value="all">Every Department</option>
-                  {departments.map((d) => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
-                </select>
+                  <div className="relative min-w-[300px]">
+                  <input type="text"
+                    placeholder={ designationFilter === "all" ? "--Every Designation--" : designationFilter }
+                    value={searchDesignation}
+                    onFocus={() => setDesignationOpen(true)}
+                    onChange={(e) => { setSearchDesignation(e.target.value); setDesignationOpen(true); }}
+                    className="w-full h-[34px] bg-[#0A0A0A] text-white border border-white/10 px-3 text-xs font-mono rounded-none uppercase focus:ring-1 focus:ring-accent focus:border-accent focus:outline-none"
+                  />
+
+                  {designationOpen && (
+                    <div className="absolute left-0 right-0 top-[36px] z-50 bg-[#0A0A0A] border border-white/10 max-h-60 overflow-y-auto shadow-2xl">
+                      <div onClick={() => {
+                          setDesignationFilter("all");
+                          setSearchDesignation("");
+                          setDesignationOpen(false);
+                        }}
+                        className="px-3 py-2 text-xs font-mono text-white hover:bg-white/10 cursor-pointer uppercase" >
+                        --Every Designation--
+                      </div>
+
+                      {designations.filter((item) => item.role ?.toLowerCase().includes(searchDesignation.toLowerCase()) )
+                        .map((item) => (
+                          <div key={item.role} onClick={() => {
+                              setDesignationFilter(item.role);
+                              setSearchDesignation("");
+                              setDesignationOpen(false);
+                            }}
+                            className={`px-3 py-2 text-xs font-mono uppercase cursor-pointer hover:bg-white/10 ${
+                              designationFilter === item.role
+                                ? "text-[#CCFF00] bg-white/5"
+                                : "text-white"
+                            }`}
+                          > {item.role}
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
 
                 <select
                   value={cityFilter}
@@ -442,7 +480,7 @@ export default function AdminPortal({
                   <tr className="bg-white/5 text-white border-b border-white/10">
                     <th className="px-6 py-3.5 font-mono text-[10px] tracking-wider uppercase font-bold text-slate-300">Employee Particulars</th>
                     <th className="px-6 py-3.5 font-mono text-[10px] tracking-wider uppercase font-bold text-slate-300">Reference ID</th>
-                    <th className="px-6 py-3.5 font-mono text-[10px] tracking-wider uppercase font-bold text-slate-300">Department</th>
+                    {/* <th className="px-6 py-3.5 font-mono text-[10px] tracking-wider uppercase font-bold text-slate-300">Designation</th> */}
                     <th className="px-6 py-3.5 font-mono text-[10px] tracking-wider uppercase font-bold text-slate-300">Office Location</th>
                     <th className="px-6 py-3.5 font-mono text-[10px] tracking-wider uppercase font-bold text-slate-300 text-center">Test Score</th>
                     <th className="px-6 py-3.5 font-mono text-[10px] tracking-wider uppercase font-bold text-slate-300">Completed Date</th>
@@ -466,12 +504,8 @@ export default function AdminPortal({
                           <div className="text-xs text-slate-400 font-mono mt-0.5">{r.email}</div>
                           <div className="text-[10px] text-yellow-400 font-semibold font-mono uppercase mt-0.5">{r.role}</div>
                         </td>
-                        <td className="px-6 py-4 font-mono text-xs">{r.employeeId}</td>
-                        <td className="px-6 py-4">
-                          <span className="bg-white/5 border border-white/10 text-white rounded-none px-2 py-0.5 font-mono font-bold text-[10px] uppercase">
-                            {r.department ? r.department.toUpperCase() : "N/A"}
-                          </span>
-                        </td>
+                        <td className="px-6 py-4 font-mono text-xs">{`COO${r.employeeId}`}</td>
+
                         <td className="px-6 py-4 text-xs font-mono">
                           <div className="flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 bg-[#CCFF00]"></span>
@@ -488,7 +522,7 @@ export default function AdminPortal({
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-slate-400 font-mono text-xs">
-                          {r.completedAt}
+                           {formatDateTime(r.completedAt)}
                         </td>
                          <td className="px-6 py-4 whitespace-nowrap text-slate-400 font-mono text-xs">
                           {r.ipAddress || "N/A"}

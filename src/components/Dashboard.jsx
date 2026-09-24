@@ -29,18 +29,11 @@ export default function Dashboard({ userSession }) {
         const excelData = users.map((row) => ({
             "Name": row.name || "",
             "Email": row.email || "",
-            "Employee ID": row.employeeId || "",
-            "Department": row.department || "",
-            "Role": row.role || "",
+            "Employee ID": row.employeeId ? `COO${row.employeeId}` : "",
+            "Designation": row.role || "",
             "City": row.city || "",
-            "Quiz Score": row.quizScore ?? "",
-            "Completed At": row.completedAt
-                ? new Date(row.completedAt).toLocaleDateString("en-IN", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric"
-                })
-                : "-",
+            "Quiz Score": `${row.quizScore ?? 0}/5`,
+            "Completion Date": formatDateTime(row.completedAt),
             "IP Address": row.ipAddress || "-",
             "Result": row.quizScore
                 ? row.quizScore >= 4
@@ -63,7 +56,7 @@ export default function Dashboard({ userSession }) {
             { wch: 25 }, // Name
             { wch: 30 }, // Email
             { wch: 18 }, // Employee ID
-            { wch: 25 }, // Department
+            // { wch: 25 }, // Department
             { wch: 25 }, // Role
             { wch: 18 }, // City
             { wch: 12 }, // Quiz Score
@@ -80,60 +73,76 @@ export default function Dashboard({ userSession }) {
         );
     };
 
+    const formatDateTime = (date) => {
+        if (!date) return "";
+        const d = new Date(date);
+        if (isNaN(d.getTime())) return "";
+        const pad = (num) => String(num).padStart(2, "0");
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    };
+
     const columns = [
-        {
-            name: "Name",
-            selector: row => row.name
-        },
-        {
-            name: "Email",
-            selector: row => row.email
-        },
-        {
-            name: "Employee ID",
-            selector: row => row.employeeId
-        },
-        {
-            name: "Department",
-            selector: row => row.department
-        },
-        {
-            name: "Role",
-            selector: row => row.role
-        },
-        {
-            name: "City",
-            selector: row => row.city
-        },
-        {
-            name: "Quiz",
-            selector: row => row.quizScore
-        },
-        {
-            name: "Completed At",
-            selector: row =>
-                row.completedAt
-                    ? new Date(row.completedAt).toLocaleDateString("en-IN", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric"
-                    })
-                    : "-"
-        },
-        {
-            name: "IP Address",
-            selector: row => row.ipAddress || "-"
-        },
-        {
-            name: "Result",
-            selector: row =>
-                row.quizScore
+    {
+        name: "Name",
+        selector: row => row.name,
+        cell: row => ( <span title={row.name || ""} className="truncate"> {row.name || "-"} </span> )
+    },
+    {
+        name: "Email",
+        selector: row => row.email,
+        cell: row => ( <span title={row.email || ""} className="truncate" style={{ maxWidth: "250px" }} > {row.email || "-"} </span> )
+    },
+    {
+        name: "Employee ID",
+        selector: row => row.employeeId,
+        cell: row => (  
+            <span title={row.employeeId ? `COO${row.employeeId}` : ""}>
+                {row.employeeId ? `COO${row.employeeId}` : "-"}
+            </span>
+        )
+    },
+    {
+        name: "Designation",
+        selector: row => row.role,
+        cell: row => ( <span title={row.role || ""} className="truncate" > {row.role || "-"} </span> )
+    },
+    {
+        name: "City",
+        selector: row => row.city,
+        cell: row => ( <span title={row.city || ""} className="truncate" > {row.city || "-"} </span> )
+    },
+    {
+        name: "Test Score",
+        selector: row => row.quizScore,
+        cell: row => (  
+            <span title={row.quizScore != null ? `${row.quizScore}/5` : ""}> 
+                {row.quizScore != null ? `${row.quizScore}/5` : "-"} 
+            </span> )
+    },
+    {
+        name: "Completed At",
+        selector: row => row.completedAt,
+        cell: row => ( <span title={formatDateTime(row.completedAt) || ""}> {row.completedAt ? formatDateTime(row.completedAt) : "-"} </span> )
+    },
+    {
+        name: "IP Address",
+        selector: row => row.ipAddress,
+        cell: row => ( <span title={row.ipAddress || ""}> {row.ipAddress || "-"} </span> )
+    },
+    {
+        name: "Result",
+        selector: row => row.quizScore,
+        cell: row => (
+            <span title={ row.quizScore ? row.quizScore >= 4 ? "Pass" : "Fail" : "Not Attempted" } >
+                {row.quizScore
                     ? row.quizScore >= 4
                         ? "Pass"
                         : "Fail"
-                    : "Not Attempted"
-        }
-    ];
+                    : "Not Attempted"}
+            </span>
+        )
+    }
+];
 
     return (
         <div className="p-5">
@@ -155,7 +164,7 @@ export default function Dashboard({ userSession }) {
             </div>
 
             <DataTable
-                title="Training Completion Records"
+                // title="Training Completion Records"
                 columns={columns}
                 data={users}
                 pagination
